@@ -214,3 +214,27 @@ impl Drop for XDo {
 }
 
 unsafe impl Send for XDo {}
+
+#[derive(Debug)]
+pub enum Events {
+    Move,
+    LClick,
+    MClick,
+    RClick,
+    ScrollU,
+    ScrollD,
+}
+
+impl From<u8> for Events {
+    fn from(val: u8) -> Self {
+        match val {
+            0 => Events::Move,
+            1 => Events::LClick,
+            2 => Events::MClick,
+            3 => Events::RClick,
+            4 => Events::ScrollU,
+            5 => Events::ScrollD,
+            _ => panic!("Invalid event type"),
+        }
+    }
+}

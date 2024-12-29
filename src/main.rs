@@ -2,7 +2,7 @@ use rocket::{fs::FileServer, futures::StreamExt, get, launch, routes};
 use std::net::IpAddr;
 mod xdo;
 
-use xdo::XDo;
+use xdo::{Events, XDo};
 
 #[get("/events")]
 fn event_channel(ws: ws::WebSocket) -> ws::Channel<'static> {
@@ -13,16 +13,38 @@ fn event_channel(ws: ws::WebSocket) -> ws::Channel<'static> {
                 let message = message?;
                 match message {
                     ws::Message::Binary(data) => {
-                        let x = f32::from_le_bytes([data[0], data[1], data[2], data[3]]);
-                        let y = f32::from_le_bytes([data[4], data[5], data[6], data[7]]);
-                        let dx = (x * 3.) as i32;
-                        let dy = (y * 3.) as i32;
+                        let etype = Events::from(data[0]);
+                        let x = f32::from_le_bytes(data[1..5].try_into().unwrap());
+                        let y = f32::from_le_bytes(data[5..9].try_into().unwrap());
+                        println!("event type: {:?}, x : {:?}, y : {:?}", etype, x, y);
+                        match etype {
+                            Events::Move => {
+                                let _ = xdo.move_mouse_relative(x as i32, y as i32);
+                            }
+                            Events::MClick => {
+                                let _ = xdo.click(2);
+                            }
+                            Events::LClick => {
+                                let _ = xdo.click(1);
+                            }
+                            Events::RClick => {
+                                let _ = xdo.click(3);
+                            }
+                            Events::ScrollU => {
+                                let _ = xdo.mouse_up(10);
+                            }
+                            Events::ScrollD => {
+                                let _ = xdo.mouse_down(10);
+                            }
+                            _ => {
+                                println!("unhandled event type");
+                            }
+                        }
                         if x.eq(&0.) && y.eq(&0.) {
                             let _ = xdo.click(1);
                         } else {
-                            let _ = xdo.move_mouse_relative(dx, dy);
+                            let _ = xdo.move_mouse_relative(x as i32, y as i32);
                         }
-                        println!("x: {:?}, y: {:?}", x, y);
                     }
                     _ => {}
                 }

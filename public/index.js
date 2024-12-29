@@ -22,7 +22,17 @@ ws.onerror = (err) => {
 
 const pad = document.getElementById('pad');
 const logs = document.getElementById('logs');
-const click = document.getElementById('clear');
+const click = document.getElementById('click');
+const rclick = document.getElementById('rclick');
+
+
+const SCALE = 3;
+const EVENT_MOVE = 0;
+const EVENT_LCLICK = 1;
+const EVENT_MCLICK = 2;
+const EVENT_RCLICK = 3;
+const EVENT_SCROLLU = 4;
+const EVENT_SCROLLD = 5;
 
 let x = 0;
 let y = 0;
@@ -59,17 +69,26 @@ const handleTouchUp = (e) => {
 	if (deltaX === 0 && deltaY === 0) {
 		return
 	}
-	let a = new Float32Array(2);
-	a[0] = deltaX;
-	a[1] = deltaY;
-	ws.send(a);
+	let vec = new Float32Array(2);
+	vec[0] = deltaX * SCALE;
+	vec[1] = deltaY * SCALE;
+	let data = new Uint8Array(9);
+	data.set(new Uint8Array([EVENT_MOVE]));
+	data.set(new Uint8Array(vec.buffer), 1);
+	ws.send(data);
 }
 
 pad.addEventListener('touchstart', handleTouchDown);
 pad.addEventListener('touchmove', handleTouchUp);
+
 click.addEventListener('click', () => {
-	let a = new Float32Array(2);
-	a[0] = 0;
-	a[1] = 0;
-	ws.send(a);
+	let data = new Uint8Array(9);
+	data.set(new Uint8Array([EVENT_LCLICK]));
+	ws.send(data);
+});
+
+rclick.addEventListener('click', () => {
+	let data = new Uint8Array(9);
+	data.set(new Uint8Array([EVENT_RCLICK]));
+	ws.send(data);
 });
